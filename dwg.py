@@ -12,19 +12,19 @@ from datetime import datetime
 import tempfile  # ✅ tambahkan ini
 dist = __import__('math').dist
 
-SPREADSHEET_ID_3 = "1EnteHGDnRhwthlCO9B12zvHUuv3wtq5L2AKlV11qAOU"
-SHEET_NAME_3 = "FDT Pekanbaru"
+SPREADSHEET_ID_3 = "1zgGQn0xr7f5bNwmffJYwqNp-skqrK8cukk5wm5T_6NY"
+SHEET_NAME_3 = "FDT Bukittinggi"
 
-SPREADSHEET_ID_4 = "1D_OMm46yr-e80s3sCyvbSSsf8wrUCwpwiYsVBKPgszw"
-SHEET_NAME_4 = "Cable Pekanbaru"
+SPREADSHEET_ID_4 = "1mBdafS4sxLzl-EFfBuw84AG4X-hngdyBuISU6QLLvSQ"
+SHEET_NAME_4 = "Cable Bukittinggi"
 
-SPREADSHEET_ID_5 = "1paa8sT3nTZh_xxwHeKV8pwVIWacq7lC8U9A8BlX6LUw"
-SHEET_NAME_5 = "Sheet1"
+SPREADSHEET_ID_5 = "1mBdafS4sxLzl-EFfBuw84AG4X-hngdyBuISU6QLLvSQ"
+SHEET_NAME_5 = "Cable Bukittinggi"
 
 SPREADSHEET_ID = "1yXBIuX2LjUWxbpnNqf6A9YimtG7d77V_AHLidhWKIS8"
-SPREADSHEET_ID_2 = "1WI0Gb8ul5GPUND4ADvhFgH4GSlgwq1_4rRgfOnPz-yc"
-SHEET_NAME = "Pole Pekanbaru"
-SHEET_NAME_2 = "FAT Pekanbaru"
+SPREADSHEET_ID_2 = "1ybAfREQxgr-BZaDoLZ1wVwLNJCC8UGAm2tVTxUw6NcU"
+SHEET_NAME = "Pole Bukittinggi"
+SHEET_NAME_2 = "FAT Bukittinggi"
 _cached_headers = None
 _cached_prev_row = None
 
@@ -416,6 +416,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
