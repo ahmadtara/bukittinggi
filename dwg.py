@@ -21,9 +21,10 @@ SHEET_NAME_4 = "Cable Bukittinggi"
 SPREADSHEET_ID_5 = "1mBdafS4sxLzl-EFfBuw84AG4X-hngdyBuISU6QLLvSQ"
 SHEET_NAME_5 = "Cable Bukittinggi"
 
-SPREADSHEET_ID = "1yXBIuX2LjUWxbpnNqf6A9YimtG7d77V_AHLidhWKIS8"
-SPREADSHEET_ID_2 = "1ybAfREQxgr-BZaDoLZ1wVwLNJCC8UGAm2tVTxUw6NcU"
+SPREADSHEET_ID = "1ybAfREQxgr-BZaDoLZ1wVwLNJCC8UGAm2tVTxUw6NcU"
 SHEET_NAME = "Pole Bukittinggi"
+
+SPREADSHEET_ID_2 = "10i9rM2JhXTzFuphj9DbcFDb8Relcwa95XHoBSWD_wQ4"
 SHEET_NAME_2 = "FAT Bukittinggi"
 _cached_headers = None
 _cached_prev_row = None
@@ -416,6 +417,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
