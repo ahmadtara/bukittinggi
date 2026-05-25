@@ -4,3 +4,4 @@ fiona
 pyogrio
 shapely
 pyproj
+lxml
