@@ -124,6 +124,7 @@ def process_kml(kml_path):
                     or 'SIALANG' in upper_name
                     or 'TARAI' in upper_name
                     or 'SENTOSA' in upper_name
+                    or 'SAIL' in upper_name
 
                 ):
 
