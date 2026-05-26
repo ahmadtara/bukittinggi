@@ -1,45 +1,3 @@
-import streamlit as st
-import zipfile
-import tempfile
-import os
-from lxml import etree
-
-# =====================================
-# STREAMLIT CONFIG
-# =====================================
-
-st.set_page_config(
-    page_title="KMZ Polygon Description Editor",
-    layout="wide"
-)
-
-st.title("KMZ / KML Polygon Description Editor")
-
-st.write(
-    """
-    Upload file KMZ / KML lalu semua description polygon
-    otomatis mengikuti parent teratas:
-    
-    - PKB
-    - ABD
-    - CL
-    - .kmz
-    """
-)
-
-# =====================================
-# UPLOAD
-# =====================================
-
-uploaded_file = st.file_uploader(
-    "Upload KMZ / KML",
-    type=["kmz", "kml"]
-)
-
-# =====================================
-# PROCESS KML
-# =====================================
-
 def process_kml(kml_path):
 
     parser = etree.XMLParser(
@@ -58,6 +16,20 @@ def process_kml(kml_path):
     }
 
     total = 0
+
+    # =====================================
+    # FOLDER YANG DIABAIKAN
+    # =====================================
+
+    ignore_keywords = [
+
+        'BOUNDARY',
+        'BOUNDARY FAT',
+        'BOUNDARY CLUSTER',
+        'FAT COVERAGE',
+        'COVER LINE'
+
+    ]
 
     # =====================================
     # SEMUA PLACEMARK
@@ -83,12 +55,12 @@ def process_kml(kml_path):
             continue
 
         # =====================================
-        # CARI PARENT TERATAS
+        # CARI PARENT VALID
         # =====================================
 
         parent = placemark.getparent()
 
-        matched_titles = []
+        valid_titles = []
 
         while parent is not None:
 
@@ -109,17 +81,19 @@ def process_kml(kml_path):
                 upper_name = parent_name.upper()
 
                 # =====================================
-                # KEYWORD VALID
+                # SKIP FOLDER TIDAK VALID
                 # =====================================
 
-                if (
+                skip = False
 
-                    'PKB' in upper_name
-                    or 'ABD' in upper_name
-                    or 'CL' in upper_name
-                    or '.KMZ' in upper_name
+                for keyword in ignore_keywords:
 
-                ):
+                    if keyword in upper_name:
+
+                        skip = True
+                        break
+
+                if not skip:
 
                     clean_name = (
                         parent_name
@@ -128,7 +102,7 @@ def process_kml(kml_path):
                         .strip()
                     )
 
-                    matched_titles.append(
+                    valid_titles.append(
                         clean_name
                     )
 
@@ -138,10 +112,10 @@ def process_kml(kml_path):
         # AMBIL PARENT PALING ATAS
         # =====================================
 
-        if not matched_titles:
+        if not valid_titles:
             continue
 
-        title_name = matched_titles[-1]
+        title_name = valid_titles[-1]
 
         # =====================================
         # DESCRIPTION
@@ -164,160 +138,3 @@ def process_kml(kml_path):
         total += 1
 
     return tree, total
-
-# =====================================
-# PROCESS FILE
-# =====================================
-
-if uploaded_file:
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-
-        input_path = os.path.join(
-            tmpdir,
-            uploaded_file.name
-        )
-
-        # SAVE FILE
-        with open(input_path, 'wb') as f:
-
-            f.write(uploaded_file.read())
-
-        # =====================================
-        # KMZ
-        # =====================================
-
-        if uploaded_file.name.lower().endswith('.kmz'):
-
-            extract_dir = os.path.join(
-                tmpdir,
-                'extract'
-            )
-
-            os.makedirs(
-                extract_dir,
-                exist_ok=True
-            )
-
-            # EXTRACT
-            with zipfile.ZipFile(
-                input_path,
-                'r'
-            ) as zip_ref:
-
-                zip_ref.extractall(
-                    extract_dir
-                )
-
-            # CARI KML
-            kml_file = None
-
-            for root_dir, dirs, files in os.walk(extract_dir):
-
-                for file in files:
-
-                    if file.lower().endswith('.kml'):
-
-                        kml_file = os.path.join(
-                            root_dir,
-                            file
-                        )
-
-                        break
-
-            if not kml_file:
-
-                st.error(
-                    "KML tidak ditemukan di dalam KMZ"
-                )
-
-                st.stop()
-
-            # PROCESS
-            tree, total = process_kml(kml_file)
-
-            # SAVE
-            tree.write(
-                kml_file,
-                pretty_print=True,
-                xml_declaration=True,
-                encoding='UTF-8'
-            )
-
-            # REPACK KMZ
-            output_kmz = os.path.join(
-                tmpdir,
-                'edited.kmz'
-            )
-
-            with zipfile.ZipFile(
-                output_kmz,
-                'w',
-                zipfile.ZIP_DEFLATED
-            ) as zip_out:
-
-                for root_dir, dirs, files in os.walk(extract_dir):
-
-                    for file in files:
-
-                        full_path = os.path.join(
-                            root_dir,
-                            file
-                        )
-
-                        arcname = os.path.relpath(
-                            full_path,
-                            extract_dir
-                        )
-
-                        zip_out.write(
-                            full_path,
-                            arcname
-                        )
-
-            st.success(
-                f"{total} polygon berhasil diubah"
-            )
-
-            # DOWNLOAD
-            with open(output_kmz, 'rb') as f:
-
-                st.download_button(
-                    label="Download KMZ Hasil",
-                    data=f,
-                    file_name="edited.kmz",
-                    mime="application/vnd.google-earth.kmz"
-                )
-
-        # =====================================
-        # KML
-        # =====================================
-
-        else:
-
-            tree, total = process_kml(input_path)
-
-            output_kml = os.path.join(
-                tmpdir,
-                'edited.kml'
-            )
-
-            tree.write(
-                output_kml,
-                pretty_print=True,
-                xml_declaration=True,
-                encoding='UTF-8'
-            )
-
-            st.success(
-                f"{total} polygon berhasil diubah"
-            )
-
-            with open(output_kml, 'rb') as f:
-
-                st.download_button(
-                    label="Download KML Hasil",
-                    data=f,
-                    file_name="edited.kml",
-                    mime="application/vnd.google-earth.kml+xml"
-                )
