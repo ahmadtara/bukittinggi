@@ -18,12 +18,17 @@ st.title("KMZ / KML Polygon Description Editor")
 st.write(
     """
     Upload file KMZ / KML lalu semua description polygon
-    akan otomatis mengikuti nama parent/folder utama.
+    otomatis mengikuti parent teratas:
+    
+    - PKB
+    - ABD
+    - CL
+    - .kmz
     """
 )
 
 # =====================================
-# UPLOAD FILE
+# UPLOAD
 # =====================================
 
 uploaded_file = st.file_uploader(
@@ -55,67 +60,114 @@ def process_kml(kml_path):
     total = 0
 
     # =====================================
-    # LOOP SEMUA FOLDER
+    # SEMUA PLACEMARK
     # =====================================
 
-    folders = root.xpath(
-        '//kml:Folder',
+    placemarks = root.xpath(
+        '//kml:Placemark',
         namespaces=ns
     )
 
-    for folder in folders:
+    for placemark in placemarks:
 
-        folder_name = folder.find(
-            'kml:name',
+        polygon = placemark.find(
+            './/kml:Polygon',
             namespaces=ns
         )
 
-        if folder_name is None:
+        # =====================================
+        # HANYA POLYGON
+        # =====================================
+
+        if polygon is None:
             continue
 
-        title_name = folder_name.text.strip()
-
         # =====================================
-        # CARI SEMUA PLACEMARK
+        # CARI PARENT TERATAS
         # =====================================
 
-        placemarks = folder.findall(
-            './/kml:Placemark',
-            namespaces=ns
-        )
+        parent = placemark.getparent()
 
-        for placemark in placemarks:
+        matched_titles = []
 
-            polygon = placemark.find(
-                './/kml:Polygon',
+        while parent is not None:
+
+            name_elem = parent.find(
+                'kml:name',
                 namespaces=ns
             )
 
-            if polygon is not None:
+            if (
+                name_elem is not None
+                and name_elem.text
+            ):
 
-                description = placemark.find(
-                    'kml:description',
-                    namespaces=ns
+                parent_name = (
+                    name_elem.text.strip()
                 )
 
+                upper_name = parent_name.upper()
+
                 # =====================================
-                # JIKA DESCRIPTION BELUM ADA
+                # KEYWORD VALID
                 # =====================================
 
-                if description is None:
+                if (
 
-                    description = etree.SubElement(
-                        placemark,
-                        '{http://www.opengis.net/kml/2.2}description'
+                    'PKB' in upper_name
+                    or 'ABD' in upper_name
+                    or 'CL' in upper_name
+                    or 'KMZ' in upper_name
+                    or 'PERUMAHAN' in upper_name
+                    or 'OPEN' in upper_name
+                    or 'PEKANBARU' in upper_name
+                    or 'SIALANG' in upper_name
+                    or 'TARAI' in upper_name
+                    or 'SENTOSA' in upper_name
+
+                ):
+
+                    clean_name = (
+                        parent_name
+                        .replace('.kmz', '')
+                        .replace('.KMZ', '')
+                        .strip()
                     )
 
-                # =====================================
-                # UBAH DESCRIPTION
-                # =====================================
+                    matched_titles.append(
+                        clean_name
+                    )
 
-                description.text = title_name
+            parent = parent.getparent()
 
-                total += 1
+        # =====================================
+        # AMBIL PARENT PALING ATAS
+        # =====================================
+
+        if not matched_titles:
+            continue
+
+        title_name = matched_titles[-1]
+
+        # =====================================
+        # DESCRIPTION
+        # =====================================
+
+        description = placemark.find(
+            'kml:description',
+            namespaces=ns
+        )
+
+        if description is None:
+
+            description = etree.SubElement(
+                placemark,
+                '{http://www.opengis.net/kml/2.2}description'
+            )
+
+        description.text = title_name
+
+        total += 1
 
     return tree, total
 
@@ -138,7 +190,7 @@ if uploaded_file:
             f.write(uploaded_file.read())
 
         # =====================================
-        # PROCESS KMZ
+        # KMZ
         # =====================================
 
         if uploaded_file.name.lower().endswith('.kmz'):
@@ -153,15 +205,17 @@ if uploaded_file:
                 exist_ok=True
             )
 
-            # EXTRACT KMZ
+            # EXTRACT
             with zipfile.ZipFile(
                 input_path,
                 'r'
             ) as zip_ref:
 
-                zip_ref.extractall(extract_dir)
+                zip_ref.extractall(
+                    extract_dir
+                )
 
-            # CARI FILE KML
+            # CARI KML
             kml_file = None
 
             for root_dir, dirs, files in os.walk(extract_dir):
@@ -185,10 +239,10 @@ if uploaded_file:
 
                 st.stop()
 
-            # PROCESS KML
+            # PROCESS
             tree, total = process_kml(kml_file)
 
-            # SAVE KML
+            # SAVE
             tree.write(
                 kml_file,
                 pretty_print=True,
@@ -231,10 +285,6 @@ if uploaded_file:
                 f"{total} polygon berhasil diubah"
             )
 
-            st.write(
-                "Description polygon berhasil diperbarui"
-            )
-
             # DOWNLOAD
             with open(output_kmz, 'rb') as f:
 
@@ -246,7 +296,7 @@ if uploaded_file:
                 )
 
         # =====================================
-        # PROCESS KML
+        # KML
         # =====================================
 
         else:
@@ -269,11 +319,6 @@ if uploaded_file:
                 f"{total} polygon berhasil diubah"
             )
 
-            st.write(
-                "Description polygon berhasil diperbarui"
-            )
-
-            # DOWNLOAD
             with open(output_kml, 'rb') as f:
 
                 st.download_button(
@@ -281,4 +326,4 @@ if uploaded_file:
                     data=f,
                     file_name="edited.kml",
                     mime="application/vnd.google-earth.kml+xml"
-                )
+                ) 
